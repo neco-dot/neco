@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Practice Trainer — Arithmetic · Word Typing · Passage Typing</title>
+<style>
+  :root {
+    --bg: #0f1420;
+    --panel: #1a2233;
+    --panel-2: #222c42;
+    --text: #e6ecf5;
+    --muted: #8b98b0;
+    --accent: #4f8cff;
+    --accent-2: #7c5cff;
+    --good: #37c978;
+    --bad: #ff5c6c;
+    --border: #2c3750;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(1200px 700px at 20% -10%, #1c2a44 0%, var(--bg) 55%);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 32px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  h1 {
+    margin: 0 0 4px;
+    font-size: 28px;
+    letter-spacing: .5px;
+  }
+  .subtitle { color: var(--muted); margin: 0 0 24px; font-size: 14px; }
+  .app { width: 100%; max-width: 720px; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    background: var(--panel);
+    padding: 6px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+  .tab {
+    flex: 1;
+    padding: 12px 10px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #fff;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+  .mode-title { font-size: 20px; font-weight: 700; margin: 0 0 16px; }
+
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+  .btn {
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    color: var(--text);
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border: none;
+    color: #fff;
+  }
+  .btn.ghost { background: transparent; }
+
+  label { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  select {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+  input[type="text"], input[type="number"] {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 15px;
+    font-family: inherit;
+  }
+  input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+
+  .big {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-align: center;
+    margin: 12px 0 20px;
+    font-variant-numeric: tabular-nums;
+  }
+  .prompt-word {
+    font-size: 40px;
+    font-weight: 800;
+    text-align: center;
+    margin: 12px 0 20px;
+    font-family: "Consolas", "Menlo", monospace;
+  }
+  .passage {
+    font-family: "Consolas", "Menlo", monospace;
+    font-size: 17px;
+    line-height: 1.7;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin-bottom: 16px;
+  }
+  .char-done { color: var(--good); }
+  .char-next { background: #33405c; border-radius: 3px; }
+  .char-wrong { color: var(--bad); background: #4a2430; border-radius: 3px; }
+  .char-todo { color: var(--muted); }
+
+  .input-area {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 8px 0 20px;
+  }
+  .input-area input { width: 100%; }
+
+  .stats {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .stat {
+    flex: 1;
+    min-width: 110px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+  }
+  .stat .v { font-size: 22px; font-weight: 800; }
+  .stat .k { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .feedback { text-align: center; font-size: 16px; font-weight: 700; min-height: 24px; margin: 8px 0; }
+  .feedback.ok { color: var(--good); }
+  .feedback.no { color: var(--bad); }
+
+  .hidden { display: none !important; }
+  .center { text-align: center; }
+  .muted { color: var(--muted); }
+  hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+</style>
+</head>
+<body>
+  <h1>Practice Trainer</h1>
+  <p class="subtitle">Arithmetic · Word Typing · Passage Typing — pick a mode and start</p>
+
+  <div class="app">
+    <div class="tabs">
+      <button class="tab active" data-mode="arith" onclick="switchMode('arith')">Arithmetic</button>
+      <button class="tab" data-mode="word" onclick="switchMode('word')">Word Typing</button>
+      <button class="tab" data-mode="passage" onclick="switchMode('passage')">Passage Typing</button>
+    </div>
+
+    <!-- ARITHMETIC -->
+    <div class="card" id="mode-arith">
+      <h2 class="mode-title">Arithmetic Practice</h2>
+      <div class="row">
+        <label>Difficulty
+          <select id="arith-diff">
+            <option value="easy">Easy (+, −)</option>
+            <option value="medium">Medium (×, ÷)</option>
+            <option value="hard">Hard (mixed)</option>
+          </select>
+        </label>
+        <label>Questions
+          <select id="arith-count">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+          </select>
+        </label>
+        <button class="btn primary" onclick="startArith()">Start</button>
+      </div>
+      <div id="arith-play" class="hidden">
+        <div class="big" id="arith-q">?</div>
+        <div class="input-area">
+          <input type="number" id="arith-answer" placeholder="Your answer" autocomplete="off">
+          <button class="btn primary" onclick="submitArith()">Enter</button>
+        </div>
+        <div class="feedback" id="arith-feedback"></div>
+        <div class="stats">
+          <div class="stat"><div class="v" id="arith-right">0</div><div class="k">Correct</div></div>
+          <div class="stat"><div class="v" id="arith-wrong">0</div><div class="k">Wrong</div></div>
+          <div class="stat"><div class="v" id="arith-left">0</div><div class="k">Left</div></div>
+        </div>
+      </div>
+      <div id="arith-summary" class="hidden center"></div>
+    </div>
+
+    <!-- WORD -->
+    <div class="card hidden" id="mode-word">
+      <h2 class="mode-title">Word Typing Practice</h2>
+      <div class="row">
+        <label>Level
+          <select id="word-level">
+            <option value="easy">Easy (short)</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard (long)</option>
+            <option value="mixed" selected>Mixed</option>
+          </select>
+        </label>
+        <label>Words
+          <select id="word-count">
+            <option value="10">10</option>
+            <option value="20" selected>20</option>
+            <option value="50">50</option>
+          </select>
+        </label>
+        <button class="btn primary" onclick="startWord()">Start</button>
+      </div>
+      <div id="word-play" class="hidden">
+        <div class="prompt-word" id="word-prompt">word</div>
+        <div class="input-area">
+          <input type="text" id="word-input" placeholder="Type the word above" autocomplete="off" autocapitalize="off" spellcheck="false">
+        </div>
+        <div class="feedback" id="word-feedback"></div>
+        <div class="stats">
+          <div class="stat"><div class="v" id="word-right">0</div><div class="k">Correct</div></div>
+          <div class="stat"><div class="v" id="word-wrong">0</div><div class="k">Wrong</div></div>
+          <div class="stat"><div class="v" id="word-wpm">0</div><div class="k">WPM</div></div>
+          <div class="stat"><div class="v" id="word-acc">100%</div><div class="k">Accuracy</div></div>
+        </div>
+      </div>
+      <div id="word-summary" class="hidden center"></div>
+    </div>
+
+    <!-- PASSAGE -->
+    <div class="card hidden" id="mode-passage">
+      <h2 class="mode-title">Passage Typing Practice</h2>
+      <div class="row">
+        <label>Passage
+          <select id="passage-select"></select>
+        </label>
+        <button class="btn primary" onclick="startPassage()">Start</button>
+      </div>
+      <div id="passage-play" class="hidden">
+        <div class="passage" id="passage-text"></div>
+        <div class="input-area">
+          <input type="text" id="passage-input" placeholder="Type the passage exactly, char by char" autocomplete="off" autocapitalize="off" spellcheck="false">
+        </div>
+        <div class="feedback" id="passage-feedback"></div>
+        <div class="stats">
+          <div class="stat"><div class="v" id="passage-wpm">0</div><div class="k">WPM</div></div>
+          <div class="stat"><div class="v" id="passage-acc">100%</div><div class="k">Accuracy</div></div>
+          <div class="stat"><div class="v" id="passage-progress">0%</div><div class="k">Progress</div></div>
+        </div>
+      </div>
+      <div id="passage-summary" class="hidden center"></div>
+    </div>
+  </div>
+
+<script>
+// ---- shared data ----
+const WORDS = {
+  easy: ["cat","dog","sun","cup","pen","map","red","big","run","sit","hot","car","hat","pig","log","bed","jam","fox","bug","ant"],
+  medium: ["table","planet","window","orange","garden","flower","school","friend","market","winter","summer","bridge","circle","square","butter","silver","rocket","island","jungle","purple"],
+  hard: ["knowledge","education","beautiful","important","different","together","computer","keyboard","university","environment","adventure","chocolate","necessary","wonderful","celebrate","opportunity","confident","brilliant","experience","imagination"],
+};
+WORD_MIX = [].concat(WORDS.easy, WORDS.medium, WORDS.hard);
+
+const PASSAGES = [
+  { name: "The Sun", text: "The sun rises in the east and sets in the west. It gives us light and warmth. Every morning the sky turns bright and the world wakes up. Plants need sunlight to grow, and people need it too." },
+  { name: "A Busy Day", text: "Tom woke up early and made his bed. He ate breakfast and walked to school. In class he wrote carefully and listened to his teacher. After school he played with his friends in the park." },
+  { name: "The Curious Cat", text: "A small cat sat by the window, watching the birds fly past. Its eyes followed every movement. When a bird came close, the cat flicked its tail but did not move. The bird flew away, and the cat blinked slowly." },
+  { name: "Learning to Type", text: "Typing well takes practice and patience. Keep your eyes on the text and let your fingers find the keys. Start slowly and build speed over time. Accuracy matters more than rushing." },
+];
+
+let arithState = null;
+let wordState = null;
+let passageState = null;
+
+function switchMode(mode){
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+  document.getElementById('mode-arith').classList.toggle('hidden', mode !== 'arith');
+  document.getElementById('mode-word').classList.toggle('hidden', mode !== 'word');
+  document.getElementById('mode-passage').classList.toggle('hidden', mode !== 'passage');
+}
+
+function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function pick(arr){ return arr[randInt(0,arr.length-1)]; }
+function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=randInt(0,i); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+// ---- ARITHMETIC ----
+function makeArithQ(diff){
+  let l, r, op;
+  if(diff === 'easy'){
+    op = pick(['+','-']);
+    if(op === '+'){ l = randInt(1,50); r = randInt(1,50); }
+    else { l = randInt(1,100); r = randInt(1,l); }
+  } else if(diff === 'medium'){
+    op = pick(['*','/']);
+    if(op === '*'){ l = randInt(2,12); r = randInt(2,12); }
+    else { r = randInt(2,12); const q = randInt(2,12); l = r*q; }
+  } else {
+    op = pick(['+','-','*','/']);
+    if(op === '+'){ l = randInt(10,200); r = randInt(10,200); }
+    else if(op === '-'){ l = randInt(20,200); r = randInt(1,l); }
+    else if(op === '*'){ l = randInt(3,19); r = randInt(3,19); }
+    else { r = randInt(3,19); const q = randInt(3,19); l = r*q; }
+  }
+  let ans;
+  if(op === '+') ans = l + r;
+  else if(op === '-') ans = l - r;
+  else if(op === '*') ans = l * r;
+  else ans = l / r;
+  return { text: l + ' ' + op + ' ' + r + ' = ?', answer: ans };
+}
+
+function startArith(){
+  const diff = document.getElementById('arith-diff').value;
+  const n = parseInt(document.getElementById('arith-count').value,10);
+  arithState = { diff, total:n, i:0, right:0, wrong:0, q: makeArithQ(diff), start: Date.now() };
+  document.getElementById('arith-play').classList.remove('hidden');
+  arithState.summaryEl = document.getElementById('arith-summary');
+  arithState.summaryEl.classList.add('hidden');
+  arithState.summaryEl.innerHTML = '';
+  document.getElementById('arith-feedback').className = 'feedback';
+  document.getElementById('arith-feedback').textContent = '';
+  showArithQ();
+}
+function showArithQ(){
+  const q = arithState.q;
+  document.getElementById('arith-q').textContent = q.text;
+  document.getElementById('arith-answer').value = '';
+  document.getElementById('arith-left').textContent = (arithState.total - arithState.i);
+  document.getElementById('arith-answer').focus();
+}
+function submitArith(){
+  if(!arithState) return;
+  const inp = document.getElementById('arith-answer');
+  const val = inp.value.trim();
+  if(val === '') return;
+  const given = parseFloat(val);
+  if(isNaN(given)) { inp.value=''; return; }
+  const fb = document.getElementById('arith-feedback');
+  const ok = Math.abs(given - arithState.q.answer) < 1e-9;
+  if(ok){ arithState.right++; fb.className='feedback ok'; fb.textContent='Correct!'; }
+  else { arithState.wrong++; fb.className='feedback no'; fb.textContent='Wrong — answer was ' + arithState.q.answer; }
+  document.getElementById('arith-right').textContent = arithState.right;
+  document.getElementById('arith-wrong').textContent = arithState.wrong;
+  arithState.i++;
+  if(arithState.i >= arithState.total){
+    finishArith();
+  } else {
+    arithState.q = makeArithQ(arithState.diff);
+    setTimeout(showArithQ, 700);
+  }
+}
+function finishArith(){
+  const s = arithState;
+  const secs = (Date.now() - s.start)/1000;
+  const acc = s.total ? Math.round(100*s.right/s.total) : 0;
+  const el = s.summaryEl;
+  el.innerHTML = '<h3>Round complete!</h3>' +
+    '<p>Correct: '+s.right+' &nbsp;|&nbsp; Wrong: '+s.wrong+' &nbsp;|&nbsp; Accuracy: '+acc+'%</p>' +
+    '<p class="muted">Time taken: '+secs.toFixed(1)+'s</p>' +
+    '<button class="btn primary" onclick="startArith()">Start again</button>';
+  el.classList.remove('hidden');
+  document.getElementById('arith-play').classList.add('hidden');
+}
+
+// ---- WORD TYPING ----
+function wordLevelList(level){
+  if(level === 'mixed') return WORD_MIX.slice();
+  return WORDS[level].slice();
+}
+function startWord(){
+  const level = document.getElementById('word-level').value;
+  const n = parseInt(document.getElementById('word-count').value,10);
+  const pool = wordLevelList(level);
+  const words = shuffle(pool).slice(0, Math.min(n, pool.length));
+  const charCount = words.reduce((a,w)=>a+w.length,0);
+  wordState = { words, i:0, right:0, wrong:0, keystrokes:0, start: Date.now(), charCount };
+  document.getElementById('word-play').classList.remove('hidden');
+  const s = document.getElementById('word-summary');
+  s.classList.add('hidden'); s.innerHTML='';
+  document.getElementById('word-feedback').className='feedback';
+  document.getElementById('word-feedback').textContent='';
+  document.getElementById('word-wpm').textContent='0';
+  document.getElementById('word-acc').textContent='100%';
+  showWord();
+}
+function showWord(){
+  document.getElementById('word-prompt').textContent = wordState.words[wordState.i];
+  document.getElementById('word-input').value='';
+  document.getElementById('word-feedback').className='feedback';
+  document.getElementById('word-feedback').textContent='';
+  document.getElementById('word-input').focus();
+}
+function wordWPM(){
+  const mins = (Date.now() - wordState.start)/60000;
+  const gross = wordState.keystrokes/5;
+  return mins > 0 ? Math.round(gross/mins) : 0;
+}
+function wordAcc(){
+  const tot = wordState.right + wordState.wrong;
+  return tot ? Math.max(0, Math.round(100*(tot - wordState.wrong)/tot)) : 100;
+}
+function onWordInput(el){
+  if(!wordState) return;
+  const target = wordState.words[wordState.i];
+  const val = el.value;
+  // count correctly matched keystrokes for WPM (approximate)
+  let matched = 0;
+  while(matched < val.length && matched < target.length && val[matched] === target[matched]) matched++;
+  wordState.keystrokes = wordState.keystrokes + matched - wordState._matched;
+  wordState._matched = matched;
+
+  if(val === target){
+    wordState.right++;
+    document.getElementById('word-feedback').className='feedback ok';
+    document.getElementById('word-feedback').textContent='Correct!';
+    wordState.i++;
+    if(wordState.i >= wordState.words.length){
+      finishWord();
+    } else {
+      setTimeout(showWord, 250);
+    }
+  }
+  document.getElementById('word-right').textContent = wordState.right;
+  document.getElementById('word-wpm').textContent = wordWPM();
+  document.getElementById('word-acc').textContent = wordAcc() + '%';
+}
+function finishWord(){
+  const s = wordState;
+  const secs = (Date.now() - s.start)/1000;
+  const wpm = wordWPM();
+  const acc = wordAcc();
+  document.getElementById('word-wpm').textContent = wpm;
+  document.getElementById('word-acc').textContent = acc + '%';
+  const el = document.getElementById('word-summary');
+  el.innerHTML = '<h3>Round complete!</h3>' +
+    '<p>Correct: '+s.right+' &nbsp;|&nbsp; Wrong: '+s.wrong+' &nbsp;|&nbsp; Accuracy: '+acc+'%</p>' +
+    '<p>Speed: '+wpm+' WPM &nbsp;|&nbsp; Time: '+secs.toFixed(1)+'s</p>' +
+    '<button class="btn primary" onclick="startWord()">Start again</button>';
+  el.classList.remove('hidden');
+  document.getElementById('word-play').classList.add('hidden');
+}
+
+// ---- PASSAGE ----
+function initPassages(){
+  const sel = document.getElementById('passage-select');
+  sel.innerHTML = '';
+  PASSAGES.forEach((p,i)=>{
+    const o = document.createElement('option');
+    o.value = i; o.textContent = p.name;
+    sel.appendChild(o);
+  });
+}
+function startPassage(){
+  const idx = parseInt(document.getElementById('passage-select').value,10);
+  const text = PASSAGES[idx].text;
+  passageState = { text, pos:0, errors:0, start: Date.now() };
+  document.getElementById('passage-play').classList.remove('hidden');
+  document.getElementById('passage-summary').classList.add('hidden');
+  document.getElementById('passage-summary').innerHTML='';
+  document.getElementById('passage-input').value='';
+  document.getElementById('passage-feedback').className='feedback';
+  document.getElementById('passage-feedback').textContent='';
+  document.getElementById('passage-progress').textContent='0%';
+  document.getElementById('passage-wpm').textContent='0';
+  document.getElementById('passage-acc').textContent='100%';
+  renderPassage();
+  document.getElementById('passage-input').focus();
+}
+function renderPassage(){
+  const el = document.getElementById('passage-text');
+  const t = passageState.text;
+  const p = passageState.pos;
+  let html = '';
+  for(let i=0;i<t.length;i++){
+    const ch = t[i];
+    if(i < p) html += '<span class="char-done">' + escapeHtml(ch) + '</span>';
+    else if(i === p) html += '<span class="char-next">' + escapeHtml(ch) + '</span>';
+    else html += '<span class="char-todo">' + escapeHtml(ch) + '</span>';
+  }
+  el.innerHTML = html || '&nbsp;';
+}
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function passageWPM(){
+  const mins = (Date.now() - passageState.start)/60000;
+  const gross = passageState.pos/5;
+  return mins > 0 ? Math.round(gross/mins) : 0;
+}
+function passageAcc(){
+  const typed = passageState.pos;
+  if(!typed) return 100;
+  const correct = typed - passageState.errors;
+  return Math.max(0, Math.round(100*correct/typed));
+}
+function onPassageInput(el){
+  if(!passageState) return;
+  const t = passageState.text;
+  const val = el.value;
+  // compare char by char, correct any mistakes, update position & errors
+  let pos = 0;
+  let errors = 0;
+  while(pos < val.length && pos < t.length){
+    if(val[pos] !== t[pos]) errors++;
+    pos++;
+  }
+  passageState.pos = pos;
+  passageState.errors = errors;
+  renderPassage();
+  document.getElementById('passage-wpm').textContent = passageWPM();
+  document.getElementById('passage-acc').textContent = passageAcc() + '%';
+  document.getElementById('passage-progress').textContent =
+    Math.round(100 * pos / t.length) + '%';
+  if(pos >= t.length && val.length <= t.length){
+    finishPassage();
+  }
+  // prevent typing past the end
+  if(val.length > t.length){
+    el.value = t;
+  }
+}
+function finishPassage(){
+  const s = passageState;
+  const secs = (Date.now() - s.start)/60000;
+  const wpm = Math.round((s.text.length/5)/secs);
+  const acc = passageAcc();
+  const el = document.getElementById('passage-summary');
+  el.innerHTML = '<h3>Passage complete!</h3>' +
+    '<p>Speed: '+wpm+' WPM &nbsp;|&nbsp; Accuracy: '+acc+'%</p>' +
+    '<p class="muted">Time: '+(secs*60).toFixed(1)+'s</p>' +
+    '<button class="btn primary" onclick="startPassage()">Start again</button>';
+  el.classList.remove('hidden');
+  document.getElementById('passage-play').classList.add('hidden');
+}
+
+// wire inputs
+document.getElementById('word-input').addEventListener('input', function(){ onWordInput(this); });
+document.getElementById('passage-input').addEventListener('input', function(){ onPassageInput(this); });
+document.getElementById('arith-answer').addEventListener('keydown', function(e){ if(e.key === 'Enter') submitArith(); });
+document.getElementById('word-input').addEventListener('keydown', function(e){ if(e.key === 'Enter') startWord(); });
+
+// init
+initPassages();
+</script>
+</body>
+</html>
